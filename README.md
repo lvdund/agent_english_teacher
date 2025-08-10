@@ -75,7 +75,7 @@ curl http://localhost:3001/health
 
 After seeding, you can use these test accounts:
 
-**Password for all accounts:** `123456`
+**Password for all accounts:** `password123`
 
 - **Admin:** admin@englishteacher.com
 - **Teacher:** sarah.teacher@englishteacher.com
