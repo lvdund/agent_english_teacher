@@ -1,0 +1,322 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Teacher English Assistant - Module Breakdown & Tech Stack Guide
+
+## 📋 Module Structure
+
+### 1. **Student Frontend Module**
+**Purpose**: Chat interface for students to practice English
+**Key Features**:
+- Claude.ai-inspired chat interface
+- File/image upload capability
+- English-only context enforcement
+- Responsive design
+- Real-time messaging
+
+### 2. **Teacher Dashboard Module**
+**Purpose**: Administrative interface for teachers
+**Key Features**:
+- have same **Student Frontend Module**
+
+### 3. **Backend API Module**
+**Purpose**: Core server logic and data management
+**Key Features**:
+- Multi-tenant architecture
+- Role-based access control
+- RESTful/GraphQL APIs
+- File upload handling
+- Performance optimization
+
+### 4. **AI Agent Module**
+**Purpose**: English learning assistant
+**Key Features**:
+- English-only query processing
+- Grammar/vocabulary assistance
+- IELTS/TOEIC support
+- Exam marking capability
+- Natural language processing
+
+### 5. **Real-time Communication Module**
+**Purpose**: Live updates and messaging
+**Key Features**:
+- WebSocket connections
+- Chat synchronization
+- Live monitoring
+- Notification system
+
+### 6. **Authentication & Authorization Module**
+**Purpose**: User management and security
+**Key Features**:
+- User roles (student/teacher)
+- Session management
+- Access control
+- Security middleware
+
+---
+
+## 🛠 Technology Stack Recommendations
+
+### **Student Frontend Module**
+
+#### **Recommended Stack:**
+- **Framework**: Next.js 14+ with App Router
+- **UI Library**: React 18+
+- **Styling**: Tailwind CSS 3.4+
+- **State Management**: Zustand or React Context + useReducer
+- **Real-time**: Socket.IO Client
+- **File Upload**: React Dropzone + Next.js API routes
+
+#### **Why This Stack:**
+- **Next.js**: Server-side rendering, API routes, excellent DX
+- **Tailwind**: Rapid UI development, consistent design system
+- **Zustand**: Lightweight state management for chat states
+- **Socket.IO**: Reliable real-time communication
+
+#### **Key Libraries:**
+```bash
+npm install next react react-dom tailwindcss
+npm install zustand socket.io-client react-dropzone
+npm install @headlessui/react lucide-react
+```
+
+### **Teacher Dashboard Module**
+
+#### **Recommended Stack:**
+- **Framework**: Next.js 14+ (same as student frontend for consistency)
+- **UI Components**: Headless UI + Custom components
+- **Data Fetching**: SWR or TanStack Query
+- **Charts/Analytics**: Recharts or Chart.js
+- **Tables**: TanStack Table
+
+#### **Why This Stack:**
+- **Consistency**: Same framework as student frontend
+- **SWR**: Excellent caching and real-time data sync
+- **Recharts**: React-native charts for analytics
+- **TanStack Table**: Powerful table component for chat lists
+
+#### **Key Libraries:**
+```bash
+npm install swr @tanstack/react-table recharts
+npm install @headlessui/react @heroicons/react
+```
+
+### **Backend API Module**
+
+#### **Option 1: Node.js/Express (Recommended)**
+```bash
+npm install express cors helmet morgan
+npm install jsonwebtoken bcryptjs multer
+npm install prisma @prisma/client
+npm install redis ioredis bull
+```
+
+**Pros:**
+- JavaScript ecosystem consistency
+- Excellent real-time support
+- Rich middleware ecosystem
+- Great performance for I/O operations
+
+#### **Option 2: Laravel/PHP**
+```bash
+composer install laravel/laravel
+composer install laravel/sanctum laravel/horizon
+composer install intervention/image spatie/laravel-permission
+```
+
+**Pros:**
+- Mature framework with built-in features
+- Excellent ORM (Eloquent)
+- Built-in queue system
+- Strong security features
+
+#### **Database Options:**
+- **PostgreSQL**: Recommended for complex queries and JSONB support
+- **MySQL**: Good alternative, widely supported
+- **Redis**: For caching and session storage
+
+### **AI Agent Module**
+
+#### **Option 1: Python FastAPI (Recommended for AI)**
+```bash
+pip install fastapi uvicorn
+pip install openai anthropic
+pip install spacy transformers
+pip install Pillow python-multipart
+```
+
+**Why Python:**
+- Superior AI/ML libraries
+- Better natural language processing tools
+- Extensive AI model integration
+- Strong community for educational AI
+
+#### **Option 2: Node.js with AI APIs**
+```bash
+npm install openai @anthropic-ai/sdk
+npm install natural compromise
+npm install sharp # for image processing
+```
+
+**AI Service Integration Options:**
+- **OpenAI GPT-4**: General language assistance
+- **Anthropic Claude**: Enhanced reasoning for educational content
+- **Custom Models**: Fine-tuned for English learning
+- **Hybrid Approach**: Multiple AI services for different features
+
+#### **English Learning Specific Libraries:**
+```python
+# Python
+pip install nltk spacy textstat
+pip install language-tool-python  # Grammar checking
+pip install pronouncing  # Pronunciation help
+```
+
+### **Real-time Communication Module**
+
+#### **Option 1: Socket.IO (Recommended)**
+```bash
+# Backend
+npm install socket.io redis socket.io-redis
+
+# Frontend
+npm install socket.io-client
+```
+
+**Pros:**
+- Automatic fallbacks (WebSocket → polling)
+- Room-based messaging perfect for classes
+- Built-in reconnection logic
+- Excellent debugging tools
+
+#### **Option 2: WebSockets + Redis**
+```bash
+npm install ws redis
+```
+
+**Pros:**
+- Lower overhead
+- More control over implementation
+- Better for high-performance scenarios
+
+### **Authentication & Authorization Module**
+
+#### **JWT + Session Hybrid Approach:**
+```bash
+npm install jsonwebtoken express-session
+npm install passport passport-local passport-jwt
+npm install express-rate-limit helmet
+```
+
+#### **Features to Implement:**
+- JWT for stateless API authentication
+- Sessions for dashboard persistent login
+- Role-based middleware
+- Rate limiting per user type
+- CSRF protection
+
+---
+
+## 📦 Complete Package.json Examples
+
+### **Frontend Package.json:**
+```json
+{
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "tailwindcss": "^3.4.0",
+    "zustand": "^4.4.0",
+    "socket.io-client": "^4.7.0",
+    "react-dropzone": "^14.2.0",
+    "swr": "^2.2.0",
+    "@headlessui/react": "^1.7.0",
+    "lucide-react": "^0.292.0",
+    "recharts": "^2.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0",
+    "typescript": "^5.0.0"
+  }
+}
+```
+
+### **Backend Package.json:**
+```json
+{
+  "dependencies": {
+    "express": "^4.18.0",
+    "socket.io": "^4.7.0",
+    "prisma": "^5.6.0",
+    "@prisma/client": "^5.6.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.0",
+    "multer": "^1.4.0",
+    "redis": "^4.6.0",
+    "bull": "^4.11.0",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.0",
+    "dotenv": "^16.3.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/jsonwebtoken": "^9.0.0",
+    "@types/bcryptjs": "^2.4.0",
+    "@types/multer": "^1.4.0",
+    "nodemon": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}
+```
+
+---
+
+## 🚀 Development Approach
+
+### **Phase 1: Core Setup**
+1. Set up Next.js frontend with basic chat UI
+2. Create Express.js backend with basic API endpoints
+3. Implement user authentication
+4. Set up database schema with Prisma
+
+### **Phase 2: Real-time Features**
+1. Integrate Socket.IO for real-time chat
+2. Build teacher dashboard for monitoring
+3. Implement file upload functionality
+4. Add basic AI integration
+
+### **Phase 3: AI Enhancement**
+1. Build sophisticated English learning AI agent
+2. Add exam marking capabilities
+3. Implement grammar/vocabulary checking
+4. Add IELTS/TOEIC specific features
+
+### **Phase 4: Optimization**
+1. Add caching layers (Redis)
+2. Implement rate limiting and queue systems
+3. Performance optimization
+4. Security hardening
+
+---
+
+## 🔧 Alternative Stack Considerations
+
+### **Full TypeScript Stack:**
+- Frontend: Next.js + TypeScript
+- Backend: Express + TypeScript or NestJS
+- Database: Prisma with PostgreSQL
+- AI: Python FastAPI with TypeScript client
+
+### **Modern Full-Stack Options:**
+- **T3 Stack**: Next.js + tRPC + Prisma + NextAuth
+- **Remix**: For better server-side handling
+- **SvelteKit**: Lighter alternative to Next.js
+- **Supabase**: Backend-as-a-Service option
+
+This modular approach allows you to develop and deploy each component independently while maintaining clear separation of concerns.

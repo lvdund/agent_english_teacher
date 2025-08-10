@@ -1,0 +1,270 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================
+// ENUMS
+// ================================
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum ClassStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum MembershipRole {
+  TEACHER
+  STUDENT
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+  AI_RESPONSE
+}
+
+enum AIInteractionType {
+  GRAMMAR_CHECK
+  VOCABULARY_HELP
+  GENERAL_HELP
+  EXAM_MARKING
+  CONVERSATION
+}
+
+enum ExamType {
+  IELTS_WRITING
+  IELTS_SPEAKING
+  TOEIC
+  GENERAL_ESSAY
+  CUSTOM
+}
+
+// ================================
+// CORE ENTITIES
+// ================================
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  password    String
+  firstName   String
+  lastName    String
+  role        UserRole @default(STUDENT)
+  isActive    Boolean  @default(true)
+  avatar      String?
+  bio         String?
+  preferences Json?    @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  memberships     ClassMembership[]
+  ownedClasses    Class[]           @relation("ClassOwner")
+  sentMessages    Message[]
+  refreshTokens   RefreshToken[]
+  aiInteractions  AIInteraction[]
+  examSubmissions ExamSubmission[]
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model Class {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  code        String      @unique
+  status      ClassStatus @default(ACTIVE)
+  teacherId   String
+  settings    Json?       @default("{}")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relationships
+  teacher         User              @relation("ClassOwner", fields: [teacherId], references: [id], onDelete: Cascade)
+  memberships     ClassMembership[]
+  messages        Message[]
+  aiInteractions  AIInteraction[]
+  examSubmissions ExamSubmission[]
+
+  @@map("classes")
+}
+
+model ClassMembership {
+  id          String         @id @default(cuid())
+  userId      String
+  classId     String
+  role        MembershipRole
+  joinedAt    DateTime       @default(now())
+  isActive    Boolean        @default(true)
+  permissions Json?          @default("{}")
+
+  // Relationships
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, classId])
+  @@map("class_memberships")
+}
+
+// ================================
+// MESSAGING SYSTEM
+// ================================
+
+model Message {
+  id              String      @id @default(cuid())
+  content         String
+  type            MessageType @default(TEXT)
+  senderId        String
+  classId         String
+  parentMessageId String?
+  metadata        Json?       @default("{}")
+  aiMetadata      Json?
+  isDeleted       Boolean     @default(false)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relationships
+  sender       User            @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  class        Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  parentMessage Message?       @relation("MessageReplies", fields: [parentMessageId], references: [id])
+  replies      Message[]       @relation("MessageReplies")
+  attachments  FileAttachment[]
+  aiInteractions AIInteraction[]
+
+  @@index([classId, createdAt])
+  @@index([senderId])
+  @@index([parentMessageId])
+  @@map("messages")
+}
+
+model FileAttachment {
+  id               String   @id @default(cuid())
+  messageId        String
+  filename         String
+  storedFilename   String
+  mimetype         String
+  size             Int
+  path             String
+  url              String
+  isDeleted        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  // Relationships
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("file_attachments")
+}
+
+// ================================
+// AI INTEGRATION
+// ================================
+
+model AIInteraction {
+  id             String            @id @default(cuid())
+  userId         String
+  classId        String
+  messageId      String?
+  model          String
+  prompt         String
+  response       String
+  tokens         Int
+  confidence     Float?
+  type           AIInteractionType
+  corrections    Json?             @default("[]")
+  suggestions    Json?             @default("[]")
+  processingTime Int // milliseconds
+  createdAt      DateTime          @default(now())
+
+  // Relationships
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class   Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  message Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([classId, createdAt])
+  @@index([type])
+  @@map("ai_interactions")
+}
+
+model ExamSubmission {
+  id          String   @id @default(cuid())
+  studentId   String
+  classId     String
+  title       String
+  type        ExamType
+  content     String
+  submittedAt DateTime @default(now())
+  gradedAt    DateTime?
+  grade       Json?
+  isGraded    Boolean  @default(false)
+
+  // Relationships
+  student User  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  class   Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([classId])
+  @@index([type])
+  @@map("exam_submissions")
+}
+
+// ================================
+// AUTHENTICATION & SECURITY
+// ================================
+
+model RefreshToken {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  userId      String
+  expiresAt   DateTime
+  isRevoked   Boolean  @default(false)
+  userAgent   String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  // Relationships
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+} 

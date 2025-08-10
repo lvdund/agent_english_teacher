@@ -1,0 +1,62 @@
+---
+alwaysApply: false
+---
+# .cursorrules
+
+# Project: Teacher English Assistant web app
+
+# Frontend for Students:
+- Follow React/Next.js best practices in building UI.
+- Design chat interface inspired by claude.ai: streaming AI chat, input box, minimalistic layout.
+- Use Tailwind CSS for styling with responsive design.
+- Allow file and image upload features within the chat input.
+- Enforce English language context for all student prompts.
+- Implement safe input validation and error handling.
+
+# Frontend for Teachers:
+- Build admin dashboard accessible only by authenticated teachers.
+- Show list of classes teacher belongs to; allow switching between classes.
+- Provide chat access panel listing all student chats per class.
+- Allow real-time viewing of student conversations.
+- Use React with modular components.
+- Use state management for handling multiple chat contexts.
+- Use WebSocket or API polling to update chats live.
+
+# Backend:
+- Architect for scalable multi-tenant design: many classes, students, and teachers.
+- Use RESTful or GraphQL API endpoints for chat messages, class data, user roles.
+- Implement role-based access control: students limited to their chat, teachers to their classes.
+- Optimize for peak load of 100 student requests/second.
+- Support image and file uploads, store securely with validation.
+- Integrate AI assistant backend restricted to English-only queries: vocabulary, grammar, IELTS, TOEIC, etc.
+- Implement exam marking feature for uploaded exams.
+- Use caching, rate limiting, and queueing to maintain performance.
+- Log and handle errors gracefully.
+- Use environment configuration for API keys and sensitive info.
+
+# Code style and conventions:
+- Use descriptive, meaningful variable and function names.
+- Follow DRY and modular design principles.
+- Avoid UI blocking on backend calls, prefer async/await.
+- Document components and backend endpoints clearly.
+- Write clean, maintainable code with proper state handling.
+
+# Technology Stack Recommendation:
+- Frontend: React, Next.js, Tailwind CSS
+- Backend: Node.js/Express or Laravel/PHP
+- Realtime: WebSockets or Laravel Echo/Socket.io
+- AI integration via external API, sanitize input for English only
+- Storage: local storage for file/image uploads
+
+# Testing:
+- Unit test UI components.
+- Integration test backend API endpoints.
+
+# Security:
+- Enforce authentication and authorization.
+- Sanitize and validate all inputs.
+- Protect file uploads from malicious content.
+
+# Performance:
+- Use caching on backend and frontend where appropriate.
+- Use pagination or lazy loading for chat message lists.

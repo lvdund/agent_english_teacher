@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass 123456
+    networks:
+      - app-network
+
+  # Redis Commander (Optional - Redis Web UI)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis_ui
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:123456
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge 

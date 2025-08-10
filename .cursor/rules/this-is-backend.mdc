@@ -1,0 +1,104 @@
+---
+alwaysApply: true
+---
+
+
+# !!!!!!!!! IMPORTANT- apply this rule first
+# This project is backend.
+# fontend, i will build at other project.
+# Make sure you only focus on backend, business logic
+
+# always check health
+```bash
+curl http://localhost:3001/health
+```
+
+# docker
+- i prefer user docker to setup env: like database
+- location [docker folder](../../docker/)
+
+# database
+
+- i use postgres
+- to run postgres, i use docker: [postgres + dpage/pgadmin + redis](../../docker/postgres.yml)
+```yaml
+version: "3.8"
+services:
+  db:
+    image: postgres:14.18
+    container_name: postgres_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: vd
+      POSTGRES_PASSWORD: 123456
+    volumes:
+      - local_pgdata:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4:9.6.0
+    container_name: pgadmin
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: louisafight@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: 123456
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+volumes:
+  local_pgdata:
+  pgadmin-data:
+```
+- setup database
+```sql
+-- Create database
+CREATE DATABASE agent_english_teacher;
+-- Create a dedicated user (optional but recommended)
+CREATE USER english_teacher_user WITH PASSWORD '654321';
+-- Grant privileges
+GRANT ALL PRIVILEGES ON DATABASE agent_english_teacher TO english_teacher_user;
+-- Exit
+\q
+```
+
+- for cache: use redis with docker
+```yaml
+version: '3.8'
+
+services:
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass 123456
+    networks:
+      - app-network
+
+  # Redis Commander (Optional - Redis Web UI)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis_ui
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:123456
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge 
+```
