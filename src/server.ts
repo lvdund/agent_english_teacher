@@ -5,7 +5,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
 import { createServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
 
 import { config } from '@/config/environment';
 import { errorHandler } from '@/middleware/errorHandler';
@@ -15,22 +14,20 @@ import { logger } from '@/utils/logger';
 import { createRedisClient, testRedisConnection, closeRedisConnection } from '@/config/redis';
 import { connectDatabase, testDatabaseConnection, disconnectDatabase, getDatabaseHealth } from '@/config/database';
 
-// Import routes (will be created in later phases)
-// import authRoutes from '@/routes/auth';
-// import userRoutes from '@/routes/users';
-// import classRoutes from '@/routes/classes';
-// import messageRoutes from '@/routes/messages';
+// Import routes
+import authRoutes from '@/routes/auth';
+import userRoutes from '@/routes/users';
+import classRoutes from '@/routes/classes';
+import messageRoutes from '@/routes/messages';
+
+// Import WebSocket server
+import { WebSocketServer } from '@/websocket/socketServer';
 
 const app = express();
 const server = createServer(app);
 
-// Socket.IO setup (will be configured in Phase 6)
-const io = new SocketIOServer(server, {
-  cors: {
-    origin: config.cors.origin,
-    credentials: config.cors.credentials,
-  },
-});
+// Initialize WebSocket server
+let wsServer: WebSocketServer;
 
 // Security middleware
 app.use(helmet());
@@ -63,6 +60,13 @@ app.get('/health', async (req, res) => {
     // Test database connection
     const dbHealth = await getDatabaseHealth();
     
+    // Get WebSocket connection stats
+    const wsStats = wsServer ? wsServer.getConnectionStats() : { 
+      totalConnections: 0, 
+      usersByRole: {}, 
+      activeRooms: 0 
+    };
+
     const healthStatus = {
       status: 'OK',
       timestamp: new Date().toISOString(),
@@ -75,6 +79,12 @@ app.get('/health', async (req, res) => {
         },
         redis: {
           status: redisHealthy ? 'connected' : 'disconnected',
+        },
+        websocket: {
+          status: wsServer ? 'running' : 'not_initialized',
+          connections: wsStats.totalConnections,
+          usersByRole: wsStats.usersByRole,
+          activeRooms: wsStats.activeRooms,
         },
       },
       system: {
@@ -102,11 +112,11 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// API routes (will be uncommented as they are created)
-// app.use('/api/auth', authRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/classes', classRoutes);
-// app.use('/api/messages', messageRoutes);
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/classes', classRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Error handling middleware
 app.use(notFoundHandler);
@@ -136,6 +146,10 @@ const startServer = async (): Promise<void> => {
       process.exit(1);
     }
     
+    // Initialize WebSocket server
+    logger.info('🔄 Initializing WebSocket server...');
+    wsServer = new WebSocketServer(server);
+    
     server.listen(config.port, () => {
       logger.info(`🚀 Server running on ${config.host}:${config.port}`);
       logger.info(`📝 Environment: ${config.nodeEnv}`);
@@ -144,6 +158,7 @@ const startServer = async (): Promise<void> => {
         logger.info(`🔴 Redis: Connected and ready`);
       }
       logger.info(`🐘 PostgreSQL: Connected and ready`);
+      logger.info(`⚡ WebSocket: Server initialized and ready`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
@@ -152,29 +167,40 @@ const startServer = async (): Promise<void> => {
 };
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
-  logger.info('Received SIGINT, shutting down gracefully...');
-  await Promise.all([
-    closeRedisConnection(),
-    disconnectDatabase(),
-  ]);
-  server.close(() => {
-    logger.info('Server closed');
-    process.exit(0);
-  });
-});
+const gracefulShutdown = async (signal: string) => {
+  logger.info(`Received ${signal}, shutting down gracefully...`);
+  
+  try {
+    // Shutdown WebSocket server first
+    if (wsServer) {
+      await wsServer.shutdown();
+    }
 
-process.on('SIGTERM', async () => {
-  logger.info('Received SIGTERM, shutting down gracefully...');
-  await Promise.all([
-    closeRedisConnection(),
-    disconnectDatabase(),
-  ]);
-  server.close(() => {
-    logger.info('Server closed');
-    process.exit(0);
-  });
-});
+    // Close other connections
+    await Promise.all([
+      closeRedisConnection(),
+      disconnectDatabase(),
+    ]);
+
+    server.close(() => {
+      logger.info('Server closed');
+      process.exit(0);
+    });
+
+    // Force exit after 30 seconds
+    setTimeout(() => {
+      logger.error('Could not close connections in time, forcefully shutting down');
+      process.exit(1);
+    }, 30000);
+    
+  } catch (error) {
+    logger.error('Error during graceful shutdown:', error);
+    process.exit(1);
+  }
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
@@ -193,4 +219,4 @@ startServer().catch(error => {
   process.exit(1);
 });
 
-export { app, server, io }; 
+export { app, server, wsServer }; 

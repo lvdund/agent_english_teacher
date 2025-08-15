@@ -1,5 +1,3 @@
-import { User } from '@prisma/client';
-
 declare global {
   namespace Express {
     interface Request {
@@ -18,4 +16,5 @@ declare global {
   }
 }
 
+// Make this file a module to enable global declarations
 export {}; 

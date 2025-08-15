@@ -12,6 +12,19 @@ export interface ApiResponse<T = any> {
   };
 }
 
+// Paginated response structure
+export interface PaginatedResponse<T = any> {
+  status: 'success' | 'error';
+  message?: string;
+  data?: T;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
 // Pagination parameters
 export interface PaginationQuery {
   page?: number;
@@ -22,7 +35,11 @@ export interface PaginationQuery {
 
 // Search parameters
 export interface SearchQuery extends PaginationQuery {
+  q?: string;
   search?: string;
+  role?: string;
+  classId?: string;
+  isActive?: string;
   filter?: Record<string, any>;
 }
 

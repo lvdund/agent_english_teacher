@@ -21,6 +21,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "baseUrl": "./",
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "types": ["node", "express", "jest"],
     "paths": {
       "@/*": ["src/*"],
       "@/config/*": ["src/config/*"],
@@ -37,11 +39,12 @@
     "src/**/*",
     "tests/**/*"
   ],
+  "files": [
+    "src/types/global.d.ts"
+  ],
   "exclude": [
     "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "dist"
   ],
   "ts-node": {
     "require": ["tsconfig-paths/register"]
